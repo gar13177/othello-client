@@ -1,6 +1,6 @@
 from logic_random import get_valid_position
 from pymongo import MongoClient
-import md5, pprint, random
+import md5, pprint, random, sys
 
 class GameConstants:
     PLAYER_1_TURN_ID = 1
@@ -176,8 +176,13 @@ client = MongoClient('localhost', 27017)
 db = client['othello']
 col = db['move']
 
-# cambiarlo a param
-set_db_initials()
-for i in range(2):
-    play()
+if __name__ == '__main__':  
+    print sys.argv  
+    if len(sys.argv) > 1:
+        count = int(sys.argv[1])
+        set_db_initials()
+        for i in range(count):
+            play()
+    else:
+        print "Uso correcto: python "+str(sys.argv[0])+" <count>"
 
