@@ -178,6 +178,6 @@ col = db['move']
 
 # cambiarlo a param
 set_db_initials()
-for i in range(20000):
+for i in range(2):
     play()
 
