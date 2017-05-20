@@ -1,5 +1,6 @@
 from socketIO_client import SocketIO, LoggingNamespace
 from logic import get_valid_position
+from logic_0 import get_valid_position as gvp
 import sys
 
 ready = False
@@ -12,6 +13,11 @@ currentGameID = None
 gameFinished = None
 socketIO = None
 
+lastBoard = None
+
+tiros = 0
+tableros_iguales = 0
+
 
 def transformBoard(board):
     result = []
@@ -20,7 +26,12 @@ def transformBoard(board):
     return result
 
 def play(position):
-    global ready, boardTiles, socketIO,tournamentID,currentTurnID,currentGameID
+    global ready, boardTiles, socketIO,tournamentID,currentTurnID,currentGameID, tiros, lastBoard, tableros_iguales
+    if lastBoard == boardTiles:
+        tableros_iguales = tableros_iguales + 1
+
+    lastBoard = boardTiles[:]
+    
     if (ready and boardTiles[position]['color'] == 0):
         print 'play'
         ready = True
@@ -32,6 +43,7 @@ def play(position):
         variables['game_id'] = currentGameID 
         variables['movement'] = position
         socketIO.emit('play', variables)
+    tiros = tiros + 1
     print 'end play'
 
 def on_connect():
@@ -53,7 +65,9 @@ def pretty_print(board):
     print chars
 
 def reset_board():
-    global boardTiles
+    global boardTiles, tiros, tableros_iguales
+    tableros_iguales = 0
+    tiros = 0
     board = []
     for i in range(8*8):
         board.append(0)
@@ -69,7 +83,8 @@ def on_ready(args):
     print 'ready'
     pretty_print(boardTiles)
     # position = input('ingrese posicion')
-    position = get_valid_position(boardTiles, currentTurnID)
+    #position = get_valid_position(boardTiles, currentTurnID)
+    position = gvp(boardTiles, currentTurnID)
     play(position) 
 
 
@@ -79,6 +94,8 @@ def on_finish(args):
     currentTurnID = args['player_turn_id']
     boardTiles = transformBoard(args['board'])
     gameFinished = True
+    print "tiros: "+str(tiros)
+    print "juegos iguales: "+str(tableros_iguales)
 
     if (gameFinished):
         variables = {}
