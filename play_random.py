@@ -182,6 +182,8 @@ if __name__ == '__main__':
         count = int(sys.argv[1])
         set_db_initials()
         for i in range(count):
+            if i % (count/10):
+                print '.',
             play()
     else:
         print "Uso correcto: python "+str(sys.argv[0])+" <count>"
