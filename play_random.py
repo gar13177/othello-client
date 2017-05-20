@@ -182,9 +182,9 @@ if __name__ == '__main__':
         count = int(sys.argv[1])
         set_db_initials()
         for i in range(count):
-            if i % (count/10):
+            if i % (count/100) == 0:
                 print '.',
             play()
     else:
-        print "Uso correcto: python "+str(sys.argv[0])+" <count>"
+        print "Uso correcto: python "+str(sys.argv[0])+" <partidas>"
 
