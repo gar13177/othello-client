@@ -165,12 +165,6 @@ def play():
         increment_variable(boards[WHITE],'lose')
     #print 'Finalizado'
 
-
-def my_count(n):
-    for i in xrange(n):
-        pass
-    return n
-
 def signal_handler(signal, frame):
     global playing
     print 'Esperando a ultima partida'
