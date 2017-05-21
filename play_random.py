@@ -107,7 +107,7 @@ def play():
     global col
     board = getStartingBoard()
     players = [BLACK, WHITE]
-    random.shuffle(players) # alternamos el inicio del juego
+    #random.shuffle(players) # alternamos el inicio del juego
 
     boards = dict() # llaves que se tienen que actualizar con minimax
     boards[BLACK] = []

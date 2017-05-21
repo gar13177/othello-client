@@ -1,0 +1,2 @@
+# ssh processess
+https://haydenjames.io/kill-inactive-ssh-sessions/
