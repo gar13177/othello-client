@@ -1,6 +1,6 @@
 from logic_random import get_valid_position
 from pymongo import MongoClient
-import md5, pprint, random, sys
+import md5, pprint, random, sys, signal
 
 class GameConstants:
     PLAYER_1_TURN_ID = 1
@@ -166,6 +166,17 @@ def play():
     #print 'Finalizado'
 
 
+def my_count(n):
+    for i in xrange(n):
+        pass
+    return n
+
+def signal_handler(signal, frame):
+    global playing
+    print 'Esperando a ultima partida'
+    playing = False
+
+
 
 EMPTY = 0
 BLACK = GameConstants.PLAYER_1_TURN_ID
@@ -176,15 +187,22 @@ client = MongoClient('localhost', 27017)
 db = client['othello']
 col = db['move']
 
+playing = True
+
 if __name__ == '__main__':  
     print sys.argv  
-    if len(sys.argv) > 1:
-        count = int(sys.argv[1])
+    if len(sys.argv) == 1:
+        #count = int(sys.argv[1])
+        count = 0
         set_db_initials()
-        for i in range(count):
-            if i % (count/100) == 0:
-                print '.',
+
+        #se crea un evento para Ctrl+C para que termine el ultimo juego
+        signal.signal(signal.SIGINT, signal_handler)
+        while playing:
             play()
+            count += 1
+        print 'Finalizado'
+        print 'Partidas jugadas: '+str(count)
     else:
-        print "Uso correcto: python "+str(sys.argv[0])+" <partidas>"
+        print "Uso correcto: python "+str(sys.argv[0])
 
