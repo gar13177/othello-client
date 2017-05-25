@@ -1,5 +1,6 @@
 from logic_random import get_valid_position
 from pymongo import MongoClient
+from time import time
 import md5, pprint, random, sys, signal
 
 class GameConstants:
@@ -170,6 +171,21 @@ def signal_handler(signal, frame):
     print 'Esperando a ultima partida'
     playing = False
 
+def stats(count, time_init, time_end):
+    """
+    time_init, time_end diferencia en segundos
+    """
+    avg_sec = count/float(time_end-time_init) # promedio de partidos por segundo
+    avg_min = count/(float(time_end-time_init)/60) # promedio de partidos por minuto
+    avg_hou = count/(float(time_end-time_init)/3600) # promedio de partidos por hora
+    avg_day = count/(float(time_end-time_init)/86400) # promedio de partidos por dia
+    
+    print 'Partidas jugadas: '+str(count)
+    print 'Partidas por segundo: '+str(avg_sec)
+    print 'Partidas por minuto: '+str(avg_min)
+    print 'Partidas por hora: '+str(avg_hou)
+    print 'Partidas por dia: '+str(avg_day)
+
 
 
 EMPTY = 0
@@ -192,11 +208,13 @@ if __name__ == '__main__':
 
         #se crea un evento para Ctrl+C para que termine el ultimo juego
         signal.signal(signal.SIGINT, signal_handler)
+        time_init = time()
         while playing:
             play()
             count += 1
         print 'Finalizado'
-        print 'Partidas jugadas: '+str(count)
+        time_end = time()
+        stats(count,time_init, time_end)
     else:
         print "Uso correcto: python "+str(sys.argv[0])
 
