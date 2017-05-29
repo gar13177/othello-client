@@ -12,3 +12,5 @@ def get_key(board, color):
     _id = to_string(board, color)
     m.update(_id)
     return m.hexdigest()
+
+# primer tablero: 307c955dffaccfedbdd831ec85ac51da

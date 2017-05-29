@@ -132,6 +132,9 @@ def play():
             for position in move[1]:
                 board[ix(position[0], position[1])] = players[turno]
 
+        if index == 0 or index == N-1 or index == N*(N-1) or index == N*N-1:
+            playing = False
+            print current_b+', '+str(index)
         # el tablero hijo le pertenece al otro jugador
         _id = get_key(board,players[(turno+1)%2])
         if col.find({'_id':_id}).count() == 0:
