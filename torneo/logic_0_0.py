@@ -1,6 +1,6 @@
 ##logic 1
 import md5
-from logic_1 import get_next_move, get_corner
+from logic_1 import get_next_move, get_corner, get_with_minimax
 from random import random
 
 N = 8 # quemado el tamanio del tablero
@@ -28,7 +28,7 @@ def get_valid_position(board, color):
         print 'esquina'
         return move
 
-    move = get_next_move(_id)
+    move = get_with_minimax(_id)
     if move != None:
         print 'eleccion'
         return move
@@ -65,162 +65,9 @@ def get_key(board, color):
     m.update(_id)
     return m.hexdigest()
 
-def mini_max_computer(board, color, depth, a, b, maximizingPlayer):
-    positions, change_tiles = get_valid_moves(board, color)
-    if len(positions) == 0:
-        return get_actual_score(board, color)
-
-    if maximizingPlayer:
-        v = -float('inf')
-        for i in range(len(positions)):
-            temp_board = board[:]
-            change_tiles[i].append(positions[i])
-
-            # siguiente tablero
-            temp_board = make_moves(temp_board,change_tiles[i], color)
-            if color == BLACK:
-                temp_color = WHITE
-            else:
-                temp_color = BLACK
-
-            v = max(v, mini_max_computer(temp_board,temp_color, depth -1, a, b, False))
-            a = max(a, v)
-            if b <= a:
-                break
-        return v
-    else:
-        v = float('inf')
-        for i in range(len(positions)):
-            temp_board = board[:]
-            change_tiles[i].append(positions[i])
-
-            # siguiente tablero
-            temp_board = make_moves(temp_board,change_tiles[i], color)
-            if color == BLACK:
-                temp_color = WHITE
-            else:
-                temp_color = BLACK
-            v = min(v, v, mini_max_computer(temp_board,temp_color, depth -1, a, b, True))
-            b = min(b, v)
-            if b <= a:
-                break
-            return v
-
-def get_actual_score(temp_board, color):
-    piece_diff_raw = get_score_board(temp_board)
-    piece_diff = 0
-
-    # se cuenta la diferencia de piezas y se busca lo siguiente:
-    # 100*B/(B+W) o 100*W/(B+W) siendo el de arriba el mayor
-    # 0 si son iguales
-    if piece_diff_raw[BLACK] > piece_diff_raw[WHITE]:
-        piece_diff = 100 * float(piece_diff_raw[BLACK])/(piece_diff_raw[BLACK]+piece_diff_raw[WHITE])
-        if color != BLACK: # si soy los negros, y hay mas blancos, lo multiplico por -1
-            piece_diff = -1*piece_diff
-    elif piece_diff_raw[BLACK] < piece_diff_raw[WHITE]:
-        piece_diff = 100 * float(piece_diff_raw[WHITE])/(piece_diff_raw[BLACK]+piece_diff_raw[WHITE])
-        if color != WHITE: # si soy los blancos, y hay mas negros, lo multiplico por -1
-            piece_diff = -1*piece_diff
-    
-    # calculo de esquinas
-    corners = {BLACK:0, WHITE:0}
-    for j in (0,N-1):
-        for i in (0,N-1):
-            if temp_board[j][i] == BLACK:
-                corners[BLACK] = corners[BLACK] +1 
-            elif temp_board[j][i] == WHITE:
-                corners[WHITE] = corners[WHITE] +1 
-
-    corners_diff = 0.0
-    if color == BLACK:
-        corners_diff = float(25*corners[BLACK]-25*corners[WHITE])
-    elif color == WHITE:
-        corners_diff = float(25*corners[WHITE]-25*corners[BLACK])
-
-    # calculo de cerca de esquinas
-    corners_close = {BLACK:0, WHITE:0}
-    for j in (0,N-1):
-        for i in (0,N-1):
-            if temp_board[j][i] == EMPTY:
-                if i == 0 and j == 0:
-                    if temp_board[j+1][i] == BLACK:
-                        corners_close[BLACK] = corners_close[BLACK] +1 
-                    elif temp_board[j+1][i] == WHITE:
-                        corners_close[WHITE] = corners_close[WHITE] +1 
-
-                    if temp_board[j][i+1] == BLACK:
-                        corners_close[BLACK] = corners_close[BLACK] +1 
-                    elif temp_board[j][i+1] == WHITE:
-                        corners_close[WHITE] = corners_close[WHITE] +1 
-
-                    if temp_board[j+1][i+1] == BLACK:
-                        corners_close[BLACK] = corners_close[BLACK] +1 
-                    elif temp_board[j+1][i+1] == WHITE:
-                        corners_close[WHITE] = corners_close[WHITE] +1 
-
-                elif i == N-1 and j==N-1:
-                    if temp_board[j-1][i] == BLACK:
-                        corners_close[BLACK] = corners_close[BLACK] +1 
-                    elif temp_board[j-1][i] == WHITE:
-                        corners_close[WHITE] = corners_close[WHITE] +1
-                        
-                    if temp_board[j][i-1] == BLACK:
-                        corners_close[BLACK] = corners_close[BLACK] +1 
-                    elif temp_board[j][i-1] == WHITE:
-                        corners_close[WHITE] = corners_close[WHITE] +1 
-
-                    if temp_board[j-1][i-1] == BLACK:
-                        corners_close[BLACK] = corners_close[BLACK] +1 
-                    elif temp_board[j-1][i-1] == WHITE:
-                        corners_close[WHITE] = corners_close[WHITE] +1 
-    
-    corners_close_diff = 0.0
-    if color == BLACK:
-        corners_close_diff = float(-12.5*corners_close[BLACK]+12.5*corners_close[WHITE])
-    elif color == WHITE:
-        corners_close_diff = float(-12.5*corners_close[WHITE]+12.5*corners_close[BLACK])
-    
-    # posibles movimientos
-    new_moves = {BLACK:0, WHITE:0}
-    b_positions, change_tiles_t = get_valid_moves(temp_board, BLACK)
-    new_moves[BLACK] = len(b_positions)
-    b_positions, change_tiles_t = get_valid_moves(temp_board, WHITE)
-    new_moves[WHITE] = len(b_positions)
-
-    new_moves_diff = 0.0
-    if new_moves[BLACK] > new_moves[WHITE]:
-        new_moves_diff = 100 * float(new_moves[BLACK])/(new_moves[BLACK]+new_moves[WHITE])
-        if color != BLACK: # si soy los negros, y hay mas blancos, lo multiplico por -1
-            new_moves_diff = -1*new_moves_diff
-    elif new_moves[BLACK] < new_moves[WHITE]:
-        new_moves_diff = 100 * float(new_moves[WHITE])/(new_moves[BLACK]+new_moves[WHITE])
-        if color != WHITE: # si soy los blancos, y hay mas negros, lo multiplico por -1
-            new_moves_diff = -1*new_moves_diff
-
-    # piezas adyacentes
-    frontier = get_frontier_discs(temp_board)
-    frontier_diff = 0.0
-    if frontier[BLACK] > frontier[WHITE]:
-        frontier_diff = 100 * float(frontier[BLACK])/(frontier[BLACK]+frontier[WHITE])
-        if color != BLACK: # si soy los negros, y hay mas blancos, lo multiplico por -1
-            frontier_diff = -1*frontier_diff
-    elif frontier[BLACK] < frontier[WHITE]:
-        frontier_diff = 100 * float(frontier[WHITE])/(frontier[BLACK]+frontier[WHITE])
-        if color != WHITE: # si soy los blancos, y hay mas negros, lo multiplico por -1
-            frontier_diff = -1*frontier_diff
-
-    # valoracion del tablero con peso
-    weight = get_disc_squares(temp_board)
-    weight_diff = 0.0
-    if color == BLACK:
-        weight_diff = weight[BLACK]-weight[WHITE]
-    elif color == WHITE:
-        weight_diff = weight[WHITE]-weight[BLACK]
-
-    return 10.0*piece_diff + 801.724*corners_diff + 382.026*corners_close_diff + 78.922*new_moves_diff + 74.396*frontier_diff + 10*weight_diff
 
 def get_computer_move(board, color):
-    print 'computer'
+
     positions, change_tiles = get_valid_moves(board, color)
 
     
@@ -238,14 +85,122 @@ def get_computer_move(board, color):
 
         # siguiente tablero
         temp_board = make_moves(temp_board,change_tiles[i_abs], color)
-        if color == BLACK:
-            temp_color = WHITE
-        else:
-            temp_color = BLACK 
-        score = mini_max_computer(temp_board, temp_color, 4, -float('inf'), float('inf'), False)
-        if score > best_score and (random() > 0.4 or best_score == -float('inf')):
-            best_move = positions[i_abs]
+
+        piece_diff_raw = get_score_board(temp_board)
+        piece_diff = 0
+
+        # se cuenta la diferencia de piezas y se busca lo siguiente:
+        # 100*B/(B+W) o 100*W/(B+W) siendo el de arriba el mayor
+        # 0 si son iguales
+        if piece_diff_raw[BLACK] > piece_diff_raw[WHITE]:
+            piece_diff = 100 * float(piece_diff_raw[BLACK])/(piece_diff_raw[BLACK]+piece_diff_raw[WHITE])
+            if color != BLACK: # si soy los negros, y hay mas blancos, lo multiplico por -1
+                piece_diff = -1*piece_diff
+        elif piece_diff_raw[BLACK] < piece_diff_raw[WHITE]:
+            piece_diff = 100 * float(piece_diff_raw[WHITE])/(piece_diff_raw[BLACK]+piece_diff_raw[WHITE])
+            if color != WHITE: # si soy los blancos, y hay mas negros, lo multiplico por -1
+                piece_diff = -1*piece_diff
         
+        # calculo de esquinas
+        corners = {BLACK:0, WHITE:0}
+        for j in (0,N-1):
+            for i in (0,N-1):
+                if temp_board[j][i] == BLACK:
+                    corners[BLACK] = corners[BLACK] +1 
+                elif temp_board[j][i] == WHITE:
+                    corners[WHITE] = corners[WHITE] +1 
+
+        corners_diff = 0.0
+        if color == BLACK:
+            corners_diff = float(25*corners[BLACK]-25*corners[WHITE])
+        elif color == WHITE:
+            corners_diff = float(25*corners[WHITE]-25*corners[BLACK])
+
+        # calculo de cerca de esquinas
+        corners_close = {BLACK:0, WHITE:0}
+        for j in (0,N-1):
+            for i in (0,N-1):
+                if temp_board[j][i] == EMPTY:
+                    if i == 0 and j == 0:
+                        if temp_board[j+1][i] == BLACK:
+                            corners_close[BLACK] = corners_close[BLACK] +1 
+                        elif temp_board[j+1][i] == WHITE:
+                            corners_close[WHITE] = corners_close[WHITE] +1 
+
+                        if temp_board[j][i+1] == BLACK:
+                            corners_close[BLACK] = corners_close[BLACK] +1 
+                        elif temp_board[j][i+1] == WHITE:
+                            corners_close[WHITE] = corners_close[WHITE] +1 
+
+                        if temp_board[j+1][i+1] == BLACK:
+                            corners_close[BLACK] = corners_close[BLACK] +1 
+                        elif temp_board[j+1][i+1] == WHITE:
+                            corners_close[WHITE] = corners_close[WHITE] +1 
+
+                    elif i == N-1 and j==N-1:
+                        if temp_board[j-1][i] == BLACK:
+                            corners_close[BLACK] = corners_close[BLACK] +1 
+                        elif temp_board[j-1][i] == WHITE:
+                            corners_close[WHITE] = corners_close[WHITE] +1
+                            
+                        if temp_board[j][i-1] == BLACK:
+                            corners_close[BLACK] = corners_close[BLACK] +1 
+                        elif temp_board[j][i-1] == WHITE:
+                            corners_close[WHITE] = corners_close[WHITE] +1 
+
+                        if temp_board[j-1][i-1] == BLACK:
+                            corners_close[BLACK] = corners_close[BLACK] +1 
+                        elif temp_board[j-1][i-1] == WHITE:
+                            corners_close[WHITE] = corners_close[WHITE] +1 
+        
+        corners_close_diff = 0.0
+        if color == BLACK:
+            corners_close_diff = float(-12.5*corners_close[BLACK]+12.5*corners_close[WHITE])
+        elif color == WHITE:
+            corners_close_diff = float(-12.5*corners_close[WHITE]+12.5*corners_close[BLACK])
+        
+        # posibles movimientos
+        new_moves = {BLACK:0, WHITE:0}
+        b_positions, change_tiles_t = get_valid_moves(temp_board, BLACK)
+        new_moves[BLACK] = len(b_positions)
+        b_positions, change_tiles_t = get_valid_moves(temp_board, WHITE)
+        new_moves[WHITE] = len(b_positions)
+
+        new_moves_diff = 0.0
+        if new_moves[BLACK] > new_moves[WHITE]:
+            new_moves_diff = 100 * float(new_moves[BLACK])/(new_moves[BLACK]+new_moves[WHITE])
+            if color != BLACK: # si soy los negros, y hay mas blancos, lo multiplico por -1
+                new_moves_diff = -1*new_moves_diff
+        elif new_moves[BLACK] < new_moves[WHITE]:
+            new_moves_diff = 100 * float(new_moves[WHITE])/(new_moves[BLACK]+new_moves[WHITE])
+            if color != WHITE: # si soy los blancos, y hay mas negros, lo multiplico por -1
+                new_moves_diff = -1*new_moves_diff
+
+        # piezas adyacentes
+        frontier = get_frontier_discs(temp_board)
+        frontier_diff = 0.0
+        if frontier[BLACK] > frontier[WHITE]:
+            frontier_diff = 100 * float(frontier[BLACK])/(frontier[BLACK]+frontier[WHITE])
+            if color != BLACK: # si soy los negros, y hay mas blancos, lo multiplico por -1
+                frontier_diff = -1*frontier_diff
+        elif frontier[BLACK] < frontier[WHITE]:
+            frontier_diff = 100 * float(frontier[WHITE])/(frontier[BLACK]+frontier[WHITE])
+            if color != WHITE: # si soy los blancos, y hay mas negros, lo multiplico por -1
+                frontier_diff = -1*frontier_diff
+
+        # valoracion del tablero con peso
+        weight = get_disc_squares(temp_board)
+        weight_diff = 0.0
+        if color == BLACK:
+            weight_diff = weight[BLACK]-weight[WHITE]
+        elif color == WHITE:
+            weight_diff = weight[WHITE]-weight[BLACK]
+
+        score = 10.0*piece_diff + 801.724*corners_diff + 382.026*corners_close_diff + 78.922*new_moves_diff + 74.396*frontier_diff + 10*weight_diff
+        if score > best_score and (random() > 0.4 or best_score == -float('inf')):
+            print 'index: '+str(i_abs)
+            best_move = positions[i_abs]
+            best_score = score
     return best_move
 
 def make_moves(board, positions, color):

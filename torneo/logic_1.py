@@ -17,6 +17,64 @@ def get_corner(_id):
     
     key, value =  d.popitem()
     return value
+
+def get_value(_id):
+    global col
+    head = col.find_one({'_id': _id})
+    if head == None:
+        return 0
+    return head['win'] * 2 + head['draw'] - head['lose']
+
+
+def get_with_minimax(_id, depth = 4):
+    global N
+    head = col.find_one({'_id': _id})
+    if head == None:
+        return None
+
+    moves = head['child'] # dictionary : _id: move
+
+    if not any(moves):
+        return None
+
+    points = dict()
+    for key in moves.keys():
+        points[key] = mini_max(key, depth, -float('inf'), float('inf'), False )
+
+    pprint.pprint(points)
+
+    max_key = max(points, key=lambda k: points[k])
+    return head['child'][max_key]
+    
+    
+def mini_max(_id, depth, a, b, maximizingPlayer):
+    
+    head = col.find_one({'_id': _id})
+    if head == None:
+        return None
+
+    # si no tiene un solo hijo guardado
+    if not any(head['child']) or depth == 0:
+        return head['win'] * 2 + head['draw'] - head['lose']
+
+    if maximizingPlayer:
+        v = -float('inf')
+        for key in head['child'].keys():
+            v = max(v, mini_max(key, depth -1, a, b, False))
+            a = max(a, v)
+            if b <= a:
+                break
+        return v
+    else:
+        v = float('inf')
+        for key in head['child'].keys():
+            v = min(v, mini_max(key, depth -1, a, b, True))
+            b = min(b, v)
+            if b <= a:
+                break
+            return v
+    
+
     
     
 
@@ -37,6 +95,7 @@ def get_next_move(_id):
     if children.count() == 0: # si no tiene ni un solo hijo...
         return None
 
+    def_weight = {'weight':-float('inf')}
     children_map = dict()
     for child in children: # calculo el minimo de cada juego siguiente mio
         choices = col.aggregate([
@@ -58,7 +117,8 @@ def get_next_move(_id):
             },
             {'$limit': 1}
         ]) # ya tengo el de mayor valor
-        children_map[child['_id']] = choices.next()['weight']
+        
+        children_map[child['_id']] = next(choices, def_weight)['weight']
 
     #print children_map
 

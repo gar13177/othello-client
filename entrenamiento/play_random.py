@@ -134,7 +134,7 @@ def play():
 
         if index == 0 or index == N-1 or index == N*(N-1) or index == N*N-1:
             playing = False
-            print current_b+', '+str(index)
+            #print current_b+', '+str(index)
         # el tablero hijo le pertenece al otro jugador
         _id = get_key(board,players[(turno+1)%2])
         if col.find({'_id':_id}).count() == 0:
